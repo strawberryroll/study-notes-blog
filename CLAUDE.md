@@ -91,3 +91,8 @@ src/
 
 - 토스트는 `sonner`의 `toast()` 사용, `<Toaster />`는 `layout.tsx`에 전역 등록되어 있음.
 - `Tooltip` 사용 시 `TooltipProvider`로 감싸야 하며, 이는 이미 `layout.tsx`의 RootLayout에 전역 적용되어 있다.
+
+## project context
+
+- PRD 문서: @docs/PRD.md
+- 개발 로드맵: @docs/ROADMAP.md
