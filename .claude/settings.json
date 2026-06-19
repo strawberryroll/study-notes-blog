@@ -1,12 +1,44 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start-hook.sh"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 -c \"import json, sys, os, fnmatch; data = json.load(sys.stdin); path = data.get('tool_input', {}).get('file_path', ''); name = os.path.basename(path); patterns = ['.env', '.env.*', 'package-lock.json', 'pnpm-lock.yaml']; sys.exit(2 if any(fnmatch.fnmatch(name, p) for p in patterns) else 0)\""
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-tool-use-hook.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/notification-hook.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-hook.sh",
+            "async": true
           }
         ]
       }
