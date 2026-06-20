@@ -19,6 +19,16 @@
       "type": "stdio",
       "command": "npx",
       "args": ["shadcn@latest", "mcp"]
+    },
+    "shrimp-task-manager": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/Users/nuyha/workspace/mcp-shrimp-task-manager/dist/index.js"],
+      "env": {
+        "DATA_DIR": "/Users/nuyha/workspace/courses/learn-claude/shrimp_data",
+        "TEMPLATES_USE": "ko",
+        "ENABLE_GUI": "true"
+      }
     }
   }
 }
