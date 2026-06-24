@@ -53,7 +53,7 @@
 | `Title` | `title` | 노트 제목 | 필수 |
 | `Tags` | `multi_select` | 태그 목록 | 선택 |
 | `Published` | `date` | 작성일 | 필수 |
-| `Status` | `select` | 글 상태: `초안` / `발행됨` | 필수 |
+| `Status` | `select` | 글 상태: `대기` / `초안` / `발행됨` | 필수 |
 | `Content` | — | 본문 (Notion 페이지 블록) | 필수 |
 
 > **API 조회 조건**: `Status === "발행됨"` 인 노트만 노출한다.
@@ -157,7 +157,7 @@ pnpm add @notionhq/client
 
 ```env
 NOTION_API_KEY=secret_xxxx
-NOTION_COURSES_DB_ID=xxxx
+NOTION_DATABASE_ID=xxxx
 ```
 
 ### Step 2. Notion API 클라이언트 구현
@@ -219,4 +219,4 @@ src/
 | 변수명 | 설명 | 필수 여부 |
 |--------|------|-----------|
 | `NOTION_API_KEY` | Notion Integration API 키 | 필수 |
-| `NOTION_COURSES_DB_ID` | 강의 목록 데이터베이스 ID | 필수 |
+| `NOTION_DATABASE_ID` | 강의 목록 데이터베이스 ID | 필수 |

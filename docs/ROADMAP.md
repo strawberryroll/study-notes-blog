@@ -10,12 +10,12 @@
 
 ### 작업 목록
 
-- [ ] Next.js 15 (App Router) + TypeScript 프로젝트 구조 확인 및 정리
-- [ ] `pnpm add @notionhq/client` 패키지 설치
-- [ ] Notion Integration 생성 및 API 키 발급
-- [ ] 강의 목록 DB / 강의별 노트 DB를 Integration에 연결
-- [ ] `.env.local` 환경 변수 설정 (`NOTION_API_KEY`, `NOTION_COURSES_DB_ID`)
-- [ ] 기본 레이아웃 구조 생성 (Header, Footer, Container)
+- [x] Next.js 15 (App Router) + TypeScript 프로젝트 구조 확인 및 정리
+- [x] `pnpm add @notionhq/client` 패키지 설치
+- [x] Notion Integration 생성 및 API 키 발급
+- [x] 강의 목록 DB / 강의별 노트 DB를 Integration에 연결
+- [x] `.env.local` 환경 변수 설정 (`NOTION_API_KEY`, `NOTION_DATABASE_ID`)
+- [x] 기본 레이아웃 구조 생성 (Header, Footer, Container)
 
 ### 테스트 (Playwright MCP)
 
@@ -42,7 +42,7 @@
 
 - [ ] `src/lib/notion.ts` — Notion 클라이언트 초기화 및 공통 API 함수 구현
   - `getCourses()`: 강의 목록 DB 전체 조회
-  - `getNotes(databaseId)`: 특정 강의의 `Status === "발행됨"` 노트 목록 조회 (Published 내림차순)
+  - `getNotes(databaseId)`: 특정 강의의 `Status === "발행됨"` 노트 목록 조회 (Published 내림차순, `대기`/`초안` 제외)
   - `getNote(noteId)`: 노트 상세 페이지 블록 콘텐츠 조회
 - [ ] 공통 타입 정의 (`Course`, `Note`, `NotionBlock` 등)
 - [ ] 공통 컴포넌트 기초 구현
@@ -146,7 +146,7 @@
 - [ ] Notion API 오류 처리 — 빈 목록 또는 에러 페이지(`error.tsx`, `not-found.tsx`) 구현
 - [ ] 반응형 디자인 점검 (375px / 768px / 1280px 브레이크포인트)
 - [ ] 모바일 햄버거 메뉴 동작 확인
-- [ ] Vercel 환경 변수 설정 (`NOTION_API_KEY`, `NOTION_COURSES_DB_ID`)
+- [ ] Vercel 환경 변수 설정 (`NOTION_API_KEY`, `NOTION_DATABASE_ID`)
 - [ ] Vercel 배포 및 프로덕션 동작 검증
 
 ### 테스트 (Playwright MCP)
