@@ -1,20 +1,10 @@
 import { Client, isFullPage } from "@notionhq/client"
-import type { BlockObjectResponse } from "@notionhq/client/build/src/api-endpoints/blocks"
-import type { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints/common"
+import type {
+  BlockObjectResponse,
+  PageObjectResponse,
+} from "@notionhq/client/build/src/api-endpoints"
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY })
-
-type TitleProp = { title: Array<{ plain_text: string }> }
-type RichTextProp = { rich_text: Array<{ plain_text: string }> }
-type MultiSelectProp = { multi_select: Array<{ name: string }> }
-type DateProp = { date: { start: string } | null }
-type SelectProp = { select: { name: string } | null }
-type FilesProp = {
-  files: Array<
-    | { type: "file"; file: { url: string } }
-    | { type: "external"; external: { url: string } }
-  >
-}
 
 export type Course = {
   id: string
@@ -32,76 +22,97 @@ export type Note = {
   status: string
 }
 
+export type { BlockObjectResponse }
+
+function getProp(page: PageObjectResponse, name: string) {
+  return page.properties[name]
+}
+
+function extractTitle(prop: ReturnType<typeof getProp>): string {
+  if (prop?.type !== "title") return ""
+  return (prop.title as Array<{ plain_text: string }>).map((t) => t.plain_text).join("")
+}
+
+function extractRichText(prop: ReturnType<typeof getProp>): string {
+  if (prop?.type !== "rich_text") return ""
+  return (prop.rich_text as Array<{ plain_text: string }>).map((t) => t.plain_text).join("")
+}
+
+function extractMultiSelect(prop: ReturnType<typeof getProp>): string[] {
+  if (prop?.type !== "multi_select") return []
+  return (prop.multi_select as Array<{ name: string }>).map((t) => t.name)
+}
+
+function extractDate(prop: ReturnType<typeof getProp>): string {
+  if (prop?.type !== "date") return ""
+  return (prop.date as { start: string } | null)?.start ?? ""
+}
+
+function extractSelect(prop: ReturnType<typeof getProp>): string {
+  if (prop?.type === "select") return (prop.select as { name: string } | null)?.name ?? ""
+  if (prop?.type === "status") return (prop.status as { name: string } | null)?.name ?? ""
+  return ""
+}
+
+function extractThumbnail(prop: ReturnType<typeof getProp>): string | null {
+  if (prop?.type !== "files") return null
+  const files = prop.files as Array<
+    | { type: "file"; file: { url: string } }
+    | { type: "external"; external: { url: string } }
+  >
+  const file = files[0]
+  if (!file) return null
+  return file.type === "file" ? file.file.url : file.external.url
+}
+
 export async function getCourses(): Promise<Course[]> {
-  const response = await notion.dataSources.query({
-    data_source_id: process.env.NOTION_DATABASE_ID!,
+  const { results } = await notion.databases.query({
+    database_id: process.env.NOTION_DATABASE_ID!,
   })
 
-  return response.results.filter(isFullPage).map((page) => {
-    const props = (page as PageObjectResponse).properties
-
-    const title = (props.Title as unknown as TitleProp).title[0]?.plain_text ?? ""
-    const databaseId = (props.DatabaseId as unknown as RichTextProp).rich_text[0]?.plain_text ?? ""
-    const description = (props.Description as unknown as RichTextProp).rich_text[0]?.plain_text ?? ""
-
-    const files = (props.Thumbnail as unknown as FilesProp).files
-    const file = files[0]
-    const thumbnail =
-      file?.type === "file"
-        ? file.file.url
-        : file?.type === "external"
-          ? file.external.url
-          : null
-
-    return { id: page.id, title, databaseId, description, thumbnail }
-  })
+  return results.filter(isFullPage).map((page) => ({
+    id: page.id,
+    title: extractTitle(getProp(page, "Title")),
+    databaseId: extractRichText(getProp(page, "DatabaseId")),
+    description: extractRichText(getProp(page, "Description")),
+    thumbnail: extractThumbnail(getProp(page, "Thumbnail")),
+  }))
 }
 
 export async function getNotes(databaseId: string): Promise<Note[]> {
-  const response = await notion.dataSources.query({
-    data_source_id: databaseId,
-    filter: {
-      property: "Status",
-      select: { equals: "발행됨" },
-    },
+  const { results } = await notion.databases.query({
+    database_id: databaseId,
+    filter: { property: "Status", status: { equals: "발행됨" } },
     sorts: [{ property: "Published", direction: "descending" }],
   })
 
-  return response.results.filter(isFullPage).map((page) => {
-    const props = (page as PageObjectResponse).properties
-
-    const title = (props.Title as unknown as TitleProp).title[0]?.plain_text ?? ""
-    const tags = (props.Tags as unknown as MultiSelectProp).multi_select.map((t) => t.name)
-    const published = (props.Published as unknown as DateProp).date?.start ?? ""
-    const status = (props.Status as unknown as SelectProp).select?.name ?? ""
-
-    return { id: page.id, title, tags, published, status }
-  })
+  return results.filter(isFullPage).map((page) => ({
+    id: page.id,
+    title: extractTitle(getProp(page, "Title")),
+    tags: extractMultiSelect(getProp(page, "Tags")),
+    published: extractDate(getProp(page, "Published")),
+    status: extractSelect(getProp(page, "Status")),
+  }))
 }
 
 export async function getNote(
   noteId: string
 ): Promise<{ page: Note; blocks: BlockObjectResponse[] }> {
-  const [pageResponse, blocksResponse] = await Promise.all([
+  const [pageResponse, { results }] = await Promise.all([
     notion.pages.retrieve({ page_id: noteId }),
     notion.blocks.children.list({ block_id: noteId }),
   ])
 
-  if (!isFullPage(pageResponse)) {
-    throw new Error(`Note not found: ${noteId}`)
+  if (!isFullPage(pageResponse)) throw new Error(`Note not found: ${noteId}`)
+
+  return {
+    page: {
+      id: pageResponse.id,
+      title: extractTitle(getProp(pageResponse, "Title")),
+      tags: extractMultiSelect(getProp(pageResponse, "Tags")),
+      published: extractDate(getProp(pageResponse, "Published")),
+      status: extractSelect(getProp(pageResponse, "Status")),
+    },
+    blocks: results.filter((b): b is BlockObjectResponse => "type" in b),
   }
-
-  const props = (pageResponse as PageObjectResponse).properties
-
-  const title = (props.Title as unknown as TitleProp).title[0]?.plain_text ?? ""
-  const tags = (props.Tags as unknown as MultiSelectProp).multi_select.map((t) => t.name)
-  const published = (props.Published as unknown as DateProp).date?.start ?? ""
-  const status = (props.Status as unknown as SelectProp).select?.name ?? ""
-
-  const page: Note = { id: pageResponse.id, title, tags, published, status }
-  const blocks = blocksResponse.results.filter(
-    (b): b is BlockObjectResponse => "type" in b
-  )
-
-  return { page, blocks }
 }
