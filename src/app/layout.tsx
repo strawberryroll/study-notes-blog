@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Claude Next.js Starterkit",
-  description: "빠르게 시작하는 모던 웹 개발 스타터킷",
+  title: "Study Notes",
+  description: "강의를 들으며 정리한 복습 노트 모음",
 };
 
 export default function RootLayout({

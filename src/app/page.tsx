@@ -8,10 +8,12 @@ export default async function Home() {
   const courses = await getCourses()
 
   return (
-    <Container className="py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">강의 목록</h1>
-        <p className="mt-2 text-muted-foreground">
+    <Container className="py-16 sm:py-24">
+      <div className="mb-12 sm:mb-16">
+        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+          강의 목록
+        </h1>
+        <p className="mt-3 text-muted-foreground sm:text-lg">
           강의를 수강하며 정리한 복습 노트를 확인해보세요.
         </p>
       </div>
@@ -19,7 +21,7 @@ export default async function Home() {
       {courses.length === 0 ? (
         <p className="text-muted-foreground">등록된 강의가 없습니다.</p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
           {courses.map((course) => (
             <CourseCard key={course.id} course={course} />
           ))}

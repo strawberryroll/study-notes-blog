@@ -12,22 +12,26 @@ import type { Course } from "@/lib/notion"
 function CourseCard({ course }: { course: Course }) {
   return (
     <Link href={`/courses/${course.id}`} className="block">
-      <Card className="h-full transition-colors hover:bg-accent/50">
+      <Card className="h-full transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-foreground/5 hover:ring-foreground/20">
         {course.thumbnail && (
           <div className="relative aspect-video w-full overflow-hidden">
             <Image
               src={course.thumbnail}
               alt={course.title}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-500 group-hover/card:scale-105"
               sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
             />
           </div>
         )}
         <CardHeader>
-          <CardTitle>{course.title}</CardTitle>
+          <CardTitle className="text-lg font-semibold tracking-tight sm:text-xl">
+            {course.title}
+          </CardTitle>
           {course.description && (
-            <CardDescription>{course.description}</CardDescription>
+            <CardDescription className="line-clamp-2">
+              {course.description}
+            </CardDescription>
           )}
         </CardHeader>
       </Card>

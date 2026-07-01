@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 + shadcn/ui(Radix, "radix-nova" 스타일) 기반의 모던 웹 스타터킷. 다크 모드, 폼 검증, 토스트 알림, 공용 레이아웃(Header/Footer/네비게이션) 등 신규 프로젝트에서 바로 재사용 가능한 컴포넌트 세트를 제공한다.
+Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 + shadcn/ui(Radix, "radix-nova" 스타일) 기반의 강의 복습 노트 블로그. Notion을 CMS로 사용하여(`@notionhq/client`) 강의별로 정리한 복습 노트를 강의 목록 → 노트 목록 → 노트 상세 구조로 공개한다. 다크 모드, ISR(`revalidate = 60`) 기반 콘텐츠 갱신, 공용 레이아웃(Header/Footer)을 제공한다.
 
 ## 자주 쓰는 명령어
 
@@ -45,9 +45,8 @@ src/
 │   ├── ui/              # shadcn CLI가 생성하는 원자적(atomic) 컴포넌트. 직접 수정 최소화
 │   ├── layout/           # 페이지 골조 컴포넌트 (페이지당 보통 1회 사용)
 │   │   ├── container.tsx # max-width + 반응형 padding 래퍼
-│   │   ├── header.tsx    # sticky 헤더 (Logo + MainNav + ThemeToggle)
-│   │   ├── footer.tsx
-│   │   └── main-nav.tsx  # 데스크톱: NavigationMenu, 모바일: Sheet(햄버거 메뉴)
+│   │   ├── header.tsx    # sticky 헤더 (Logo + ThemeToggle)
+│   │   └── footer.tsx
 │   └── common/           # 여러 곳에서 재사용되는 합성 컴포넌트
 │       ├── theme-provider.tsx  # next-themes ThemeProvider 래핑
 │       ├── theme-toggle.tsx    # DropdownMenu + lucide Sun/Moon
@@ -61,7 +60,7 @@ src/
 ### 컴포넌트 계층 규칙
 
 - **`ui`**: shadcn/ui 원본. kebab-case 파일명, PascalCase named export.
-- **`layout`**: 페이지 골조(Header/Footer/Container/MainNav). `Container`로 페이지 폭과 패딩을 통일한다.
+- **`layout`**: 페이지 골조(Header/Footer/Container). `Container`로 페이지 폭과 패딩을 통일한다.
 - **`common`**: `ui` 컴포넌트 2개 이상을 조합하거나 외부 라이브러리(next-themes 등)를 래핑하는 재사용 컴포넌트.
 - 경로 별칭은 `@/*` → `./src/*` (예: `@/components/ui/button`, `@/lib/utils`).
 

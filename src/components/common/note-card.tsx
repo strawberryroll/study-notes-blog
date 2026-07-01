@@ -7,7 +7,7 @@ import type { Note } from "@/lib/notion"
 function NoteCard({ courseId, note }: { courseId: string; note: Note }) {
   return (
     <Link href={`/courses/${courseId}/${note.id}`} className="block">
-      <Card className="transition-colors hover:bg-accent/50">
+      <Card className="transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-foreground/5 hover:ring-foreground/20">
         <CardHeader>
           <CardTitle>{note.title}</CardTitle>
           <div className="mt-2 flex flex-wrap items-center gap-2">
