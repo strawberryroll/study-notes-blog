@@ -40,12 +40,12 @@
 
 ### 작업 목록
 
-- [ ] `src/lib/notion.ts` — Notion 클라이언트 초기화 및 공통 API 함수 구현
+- [x] `src/lib/notion.ts` — Notion 클라이언트 초기화 및 공통 API 함수 구현
   - `getCourses()`: 강의 목록 DB 전체 조회
   - `getNotes(databaseId)`: 특정 강의의 `Status === "발행됨"` 노트 목록 조회 (Published 내림차순, `대기`/`초안` 제외)
   - `getNote(noteId)`: 노트 상세 페이지 블록 콘텐츠 조회
-- [ ] 공통 타입 정의 (`Course`, `Note`, `NotionBlock` 등)
-- [ ] 공통 컴포넌트 기초 구현
+- [x] 공통 타입 정의 (`Course`, `Note`, `NotionBlock` 등)
+- [x] 공통 컴포넌트 기초 구현
   - `src/components/layout/header.tsx`
   - `src/components/layout/footer.tsx`
   - `src/components/layout/container.tsx`
@@ -74,11 +74,11 @@
 
 ### 작업 목록
 
-- [ ] 홈 페이지 (`src/app/page.tsx`) — 강의 목록 카드 레이아웃
+- [x] 홈 페이지 (`src/app/page.tsx`) — 강의 목록 카드 레이아웃
   - `src/components/common/course-card.tsx`: 썸네일, 강의명, 한 줄 설명 표시
-- [ ] 노트 목록 페이지 (`src/app/courses/[courseId]/page.tsx`)
+- [x] 노트 목록 페이지 (`src/app/courses/[courseId]/page.tsx`)
   - `src/components/common/note-card.tsx`: 제목, 태그, 작성일 표시
-- [ ] 노트 상세 페이지 (`src/app/courses/[courseId]/[noteId]/page.tsx`)
+- [x] 노트 상세 페이지 (`src/app/courses/[courseId]/[noteId]/page.tsx`)
   - `src/components/common/notion-renderer.tsx`: Notion 블록 → React 컴포넌트 렌더러
   - MVP 지원 블록: 단락, 헤딩(H1–H3), 불릿 목록, 번호 목록, 코드 블록, 인용, 구분선, 이미지
 
@@ -142,7 +142,7 @@
 
 ### 작업 목록
 
-- [ ] ISR 설정 — 각 페이지에 `revalidate = 60` 적용
+- [x] ISR 설정 — 각 페이지에 `revalidate = 60` 적용
 - [ ] Notion API 오류 처리 — 빈 목록 또는 에러 페이지(`error.tsx`, `not-found.tsx`) 구현
 - [ ] 반응형 디자인 점검 (375px / 768px / 1280px 브레이크포인트)
 - [ ] 모바일 햄버거 메뉴 동작 확인
