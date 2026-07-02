@@ -110,12 +110,12 @@
 
 ### 작업 목록
 
-- [ ] 태그 필터링 — 노트 목록 페이지에서 `Tags` 기준으로 필터
-- [ ] 검색 기능 — 노트 제목 기준 클라이언트 사이드 검색
-- [ ] SEO 최적화
+- [x] 태그 필터링 — 노트 목록 페이지에서 `Tags` 기준으로 필터
+- [x] 검색 기능 — 노트 제목 기준 클라이언트 사이드 검색
+- [x] SEO 최적화
   - 각 페이지에 `generateMetadata` 적용 (`<title>`, `<meta description>`, Open Graph)
   - 이미지 `alt` 텍스트 필수화
-- [ ] 접근성 — 키보드 네비게이션, 포커스 트랩 점검
+- [x] 접근성 — 키보드 네비게이션, 포커스 트랩 점검
 
 ### 테스트 (Playwright MCP)
 
@@ -143,16 +143,14 @@
 ### 작업 목록
 
 - [x] ISR 설정 — 각 페이지에 `revalidate = 60` 적용
-- [ ] Notion API 오류 처리 — 빈 목록 또는 에러 페이지(`error.tsx`, `not-found.tsx`) 구현
-- [ ] 반응형 디자인 점검 (375px / 768px / 1280px 브레이크포인트)
-- [ ] 모바일 햄버거 메뉴 동작 확인
-- [ ] Vercel 환경 변수 설정 (`NOTION_API_KEY`, `NOTION_DATABASE_ID`)
-- [ ] Vercel 배포 및 프로덕션 동작 검증
+- [x] Notion API 오류 처리 — 빈 목록 또는 에러 페이지(`error.tsx`, `not-found.tsx`) 구현
+- [x] 반응형 디자인 점검 (375px / 768px / 1280px 브레이크포인트)
+- [ ] Vercel 환경 변수 설정 (`NOTION_API_KEY`, `NOTION_DATABASE_ID`) — *수동 확인 필요: Vercel 대시보드 설정은 코드로 확인 불가*
+- [ ] Vercel 배포 및 프로덕션 동작 검증 — *수동 확인 필요: 실제 배포 URL 접속 확인 필요*
 
 ### 테스트 (Playwright MCP)
 
 - **반응형**: `browser_resize`로 375px / 768px / 1280px 뷰포트 전환 후 `browser_take_screenshot`으로 레이아웃 확인
-- **모바일 메뉴**: 375px에서 햄버거 아이콘 `browser_click` → 메뉴 펼침 확인
 - **에러 처리**: 존재하지 않는 경로(`/courses/invalid-id`) 접속 → `not-found.tsx` 노출 확인
 - **프로덕션**: Vercel 배포 URL로 `browser_navigate` 후 전체 페이지 smoke test
 
@@ -188,6 +186,16 @@
 - 주요 도구: `browser_navigate`, `browser_snapshot`, `browser_click`, `browser_fill_form`, `browser_evaluate`, `browser_resize`, `browser_take_screenshot`, `browser_console_messages`, `browser_press_key`
 - API 연동(Phase 2)과 비즈니스 로직(Phase 3) 단계는 특히 꼼꼼히 검증한다
 - **구현 완료 → 테스트 수행 → 통과 확인 → 다음 Phase 진행** 순서를 반드시 지킨다
+
+### 코드 품질 검증 (매 기능 구현 직후, Playwright 테스트 이전)
+
+각 작업 목록 항목(또는 의미 있는 단위의 구현)을 마칠 때마다 Playwright 테스트를 진행하기 전에 다음 3가지를 통과해야 한다:
+
+1. `pnpm lint` — ESLint 규칙 위반 없음
+2. `pnpm build`(또는 `tsc --noEmit`) — TypeScript 타입 에러 없음
+3. `pnpm build` — 프로덕션 빌드 성공 (2번과 함께 확인 가능)
+
+세 가지 중 하나라도 실패하면 다음 작업으로 넘어가지 않고 즉시 원인을 수정한다. (현재 프로젝트에는 Prettier가 설치되어 있지 않으므로 포맷 검증은 대상에서 제외한다.)
 
 ---
 

@@ -18,6 +18,16 @@ pnpm lint     # ESLint 검사
 - 패키지 매니저는 **pnpm**을 사용한다 (pnpm-lock.yaml 존재).
 - 테스트 러너는 아직 설정되어 있지 않다.
 
+## 작업 완료 체크리스트
+
+기능 구현(또는 의미 있는 단위의 변경) 하나를 마칠 때마다, 다음 커밋/다음 작업으로 넘어가기 전에 아래 항목을 **순서대로** 확인한다. 하나라도 실패하면 다음 단계로 넘어가지 않고 즉시 원인을 수정한다.
+
+1. `pnpm lint` — ESLint 규칙 위반 없음
+2. `tsc --noEmit` — TypeScript 타입 에러 없음 (또는 `pnpm build`로 타입 체크까지 함께 확인)
+3. `pnpm build` — 프로덕션 빌드 성공
+
+이 프로젝트에는 Prettier가 설치되어 있지 않으므로 포맷 검증은 체크리스트에서 제외한다.
+
 ### shadcn/ui 컴포넌트 추가
 
 ```bash
@@ -38,23 +48,33 @@ pnpm dlx shadcn@latest add <컴포넌트명> -y
 ```
 src/
 ├── app/
-│   ├── layout.tsx     # RootLayout: ThemeProvider, TooltipProvider, Header, Footer, Toaster 합성
-│   ├── page.tsx        # 홈페이지 (Hero, Feature 카드, 컴포넌트 데모 탭, FAQ)
-│   └── globals.css     # Tailwind 4 + shadcn 테마 변수(OKLCH), 다크모드(.dark 클래스) 정의
+│   ├── layout.tsx                          # RootLayout: ThemeProvider, TooltipProvider, Header, Footer, Toaster 합성
+│   ├── page.tsx                             # 홈페이지 (Notion 강의 목록 DB 조회 → CourseCard 그리드, ISR revalidate=60)
+│   ├── globals.css                          # Tailwind 4 + shadcn 테마 변수(OKLCH), 다크모드(.dark 클래스) 정의
+│   └── courses/
+│       └── [courseId]/
+│           ├── page.tsx                     # 노트 목록 (강의별 발행된 노트, Published 내림차순)
+│           ├── loading.tsx                  # Suspense 폴백 (Skeleton)
+│           └── [noteId]/
+│               ├── page.tsx                 # 노트 상세 (Notion 블록 렌더링)
+│               └── loading.tsx              # Suspense 폴백 (Skeleton)
 ├── components/
-│   ├── ui/              # shadcn CLI가 생성하는 원자적(atomic) 컴포넌트. 직접 수정 최소화
-│   ├── layout/           # 페이지 골조 컴포넌트 (페이지당 보통 1회 사용)
-│   │   ├── container.tsx # max-width + 반응형 padding 래퍼
-│   │   ├── header.tsx    # sticky 헤더 (Logo + ThemeToggle)
+│   ├── ui/                                  # shadcn CLI가 생성하는 원자적(atomic) 컴포넌트. 직접 수정 최소화
+│   ├── layout/                              # 페이지 골조 컴포넌트 (페이지당 보통 1회 사용)
+│   │   ├── container.tsx                    # max-width + 반응형 padding 래퍼
+│   │   ├── header.tsx                       # sticky 헤더 (Logo + ThemeToggle)
 │   │   └── footer.tsx
-│   └── common/           # 여러 곳에서 재사용되는 합성 컴포넌트
-│       ├── theme-provider.tsx  # next-themes ThemeProvider 래핑
-│       ├── theme-toggle.tsx    # DropdownMenu + lucide Sun/Moon
+│   └── common/                              # 여러 곳에서 재사용되는 합성 컴포넌트
+│       ├── theme-provider.tsx               # next-themes ThemeProvider 래핑
+│       ├── theme-toggle.tsx                 # DropdownMenu + lucide Sun/Moon
 │       ├── logo.tsx
-│       └── contact-form.tsx    # react-hook-form + zod 폼 검증 데모
-├── hooks/                # 커스텀 훅 (현재 비어있음, 필요 시 use-xxx.ts 추가)
+│       ├── contact-form.tsx                 # react-hook-form + zod 폼 검증 데모
+│       ├── course-card.tsx                  # 강의 카드 (썸네일 + 강의명 + 한 줄 설명)
+│       ├── note-card.tsx                    # 노트 목록 아이템 (제목 + 태그 + 작성일)
+│       └── notion-renderer.tsx              # Notion 블록(BlockObjectResponse[]) → React 컴포넌트 렌더러
 └── lib/
-    └── utils.ts          # cn() — clsx + tailwind-merge
+    ├── notion.ts                             # Notion 클라이언트 및 getCourses/getNotes/getNote
+    └── utils.ts                              # cn() — clsx + tailwind-merge
 ```
 
 ### 컴포넌트 계층 규칙
@@ -62,6 +82,7 @@ src/
 - **`ui`**: shadcn/ui 원본. kebab-case 파일명, PascalCase named export.
 - **`layout`**: 페이지 골조(Header/Footer/Container). `Container`로 페이지 폭과 패딩을 통일한다.
 - **`common`**: `ui` 컴포넌트 2개 이상을 조합하거나 외부 라이브러리(next-themes 등)를 래핑하는 재사용 컴포넌트.
+- **`lib/notion.ts`**: Notion API 접근은 반드시 이 파일의 `getCourses()`/`getNotes(databaseId)`/`getNote(noteId)`를 통해서만 하고, `@notionhq/client`를 페이지/컴포넌트에서 직접 import하지 않는다.
 - 경로 별칭은 `@/*` → `./src/*` (예: `@/components/ui/button`, `@/lib/utils`).
 
 ### 폼 작성 패턴

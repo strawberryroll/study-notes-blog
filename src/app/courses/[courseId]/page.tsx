@@ -1,6 +1,7 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { NoteCard } from "@/components/common/note-card"
+import { NoteList } from "@/components/common/note-list"
 import { Container } from "@/components/layout/container"
 import { getCourses, getNotes } from "@/lib/notion"
 
@@ -9,6 +10,21 @@ interface Props {
 }
 
 export const revalidate = 60
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { courseId } = await params
+  const courses = await getCourses()
+  const course = courses.find((c) => c.id === courseId)
+
+  if (!course) {
+    return { title: "강의를 찾을 수 없습니다 | Study Notes" }
+  }
+
+  return {
+    title: `${course.title} | Study Notes`,
+    description: course.description || `${course.title} 강의의 복습 노트 목록`,
+  }
+}
 
 export default async function CourseNotesPage({ params }: Props) {
   const { courseId } = await params
@@ -36,11 +52,7 @@ export default async function CourseNotesPage({ params }: Props) {
       {notes.length === 0 ? (
         <p className="text-muted-foreground">등록된 노트가 없습니다.</p>
       ) : (
-        <div className="space-y-4">
-          {notes.map((note) => (
-            <NoteCard key={note.id} courseId={course.id} note={note} />
-          ))}
-        </div>
+        <NoteList courseId={course.id} notes={notes} />
       )}
     </Container>
   )

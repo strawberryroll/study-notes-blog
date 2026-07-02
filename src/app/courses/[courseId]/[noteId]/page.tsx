@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { Badge } from "@/components/ui/badge"
@@ -10,6 +11,29 @@ interface Props {
 }
 
 export const revalidate = 60
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { noteId } = await params
+
+  try {
+    const { page: note } = await getNote(noteId)
+    const description =
+      [note.published, ...note.tags].filter(Boolean).join(" · ") ||
+      "강의 복습 노트"
+
+    return {
+      title: `${note.title} | Study Notes`,
+      description,
+      openGraph: {
+        title: note.title,
+        description,
+        type: "article",
+      },
+    }
+  } catch {
+    return { title: "노트를 찾을 수 없습니다 | Study Notes" }
+  }
+}
 
 export default async function NoteDetailPage({ params }: Props) {
   const { noteId } = await params

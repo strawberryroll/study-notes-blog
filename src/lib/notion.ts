@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { Client, isFullPage } from "@notionhq/client"
 import type {
   BlockObjectResponse,
@@ -65,7 +66,7 @@ function extractThumbnail(prop: ReturnType<typeof getProp>): string | null {
   return file.type === "file" ? file.file.url : file.external.url
 }
 
-export async function getCourses(): Promise<Course[]> {
+export const getCourses = cache(async (): Promise<Course[]> => {
   const { results } = await notion.databases.query({
     database_id: process.env.NOTION_DATABASE_ID!,
   })
@@ -77,7 +78,7 @@ export async function getCourses(): Promise<Course[]> {
     description: extractRichText(getProp(page, "Description")),
     thumbnail: extractThumbnail(getProp(page, "Thumbnail")),
   }))
-}
+})
 
 export async function getNotes(databaseId: string): Promise<Note[]> {
   const { results } = await notion.databases.query({
@@ -95,24 +96,26 @@ export async function getNotes(databaseId: string): Promise<Note[]> {
   }))
 }
 
-export async function getNote(
-  noteId: string
-): Promise<{ page: Note; blocks: BlockObjectResponse[] }> {
-  const [pageResponse, { results }] = await Promise.all([
-    notion.pages.retrieve({ page_id: noteId }),
-    notion.blocks.children.list({ block_id: noteId }),
-  ])
+export const getNote = cache(
+  async (
+    noteId: string
+  ): Promise<{ page: Note; blocks: BlockObjectResponse[] }> => {
+    const [pageResponse, { results }] = await Promise.all([
+      notion.pages.retrieve({ page_id: noteId }),
+      notion.blocks.children.list({ block_id: noteId }),
+    ])
 
-  if (!isFullPage(pageResponse)) throw new Error(`Note not found: ${noteId}`)
+    if (!isFullPage(pageResponse)) throw new Error(`Note not found: ${noteId}`)
 
-  return {
-    page: {
-      id: pageResponse.id,
-      title: extractTitle(getProp(pageResponse, "Title")),
-      tags: extractMultiSelect(getProp(pageResponse, "Tags")),
-      published: extractDate(getProp(pageResponse, "Published")),
-      status: extractSelect(getProp(pageResponse, "Status")),
-    },
-    blocks: results.filter((b): b is BlockObjectResponse => "type" in b),
+    return {
+      page: {
+        id: pageResponse.id,
+        title: extractTitle(getProp(pageResponse, "Title")),
+        tags: extractMultiSelect(getProp(pageResponse, "Tags")),
+        published: extractDate(getProp(pageResponse, "Published")),
+        status: extractSelect(getProp(pageResponse, "Status")),
+      },
+      blocks: results.filter((b): b is BlockObjectResponse => "type" in b),
+    }
   }
-}
+)
