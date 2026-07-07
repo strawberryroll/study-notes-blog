@@ -1,170 +1,104 @@
-# ROADMAP: 강의 복습 노트 블로그 (Notion CMS 기반)
+# ROADMAP: 강의 복습 노트 블로그 — 고도화 (v2)
 
-> PRD 기준 작성일: 2026-06-19  
-> 총 예상 소요 기간: **9~14일**  
-> **원칙: 각 Phase는 구현 완료 → Playwright MCP 테스트 통과 → 다음 Phase 진행 순서를 반드시 지킨다.**
+> 작성일: 2026-07-07
+> 선행 문서: [PRD](../docs/PRD.md), [MVP 로드맵(v1)](./roadmaps/ROADMAP_v1.md)
+> 총 예상 소요 기간: **6~9일**
+> **원칙: 각 Phase는 구현 완료 → 코드 품질 검증 → Playwright MCP 테스트 통과 → 다음 Phase 진행 순서를 반드시 지킨다.**
 
 ---
 
-## Phase 1: 프로젝트 초기 설정 (예상 1~2일)
+## 배경
+
+MVP(v1 로드맵 Phase 1~5)는 완료되어 Vercel에 배포되었다. 강의 목록/노트 목록/노트 상세 조회, 태그 필터, 검색, SEO, ISR, 반응형까지 핵심 흐름은 갖춰졌다. 이번 v2는 **노트 상세 페이지의 읽기 경험**과 **Notion 콘텐츠 표현력**을 중심으로 고도화한다.
+
+### 대상 파일 (현재 구조 기준)
+
+- `src/lib/notion.ts` — `getCourses()` / `getNotes(databaseId)` / `getNote(noteId)`
+- `src/components/common/notion-renderer.tsx` — Notion 블록 렌더러 (현재 8종 블록 지원: 단락, H1-H3, 불릿/번호 목록, 코드, 인용, 구분선, 이미지)
+- `src/app/courses/[courseId]/[noteId]/page.tsx` — 노트 상세 페이지
+
+---
+
+## Phase 6: 노트 상세 읽기 경험 개선 (예상 2~3일)
 
 ### 작업 목록
 
-- [x] Next.js 15 (App Router) + TypeScript 프로젝트 구조 확인 및 정리
-- [x] `pnpm add @notionhq/client` 패키지 설치
-- [x] Notion Integration 생성 및 API 키 발급
-- [x] 강의 목록 DB / 강의별 노트 DB를 Integration에 연결
-- [x] `.env.local` 환경 변수 설정 (`NOTION_API_KEY`, `NOTION_DATABASE_ID`)
-- [x] 기본 레이아웃 구조 생성 (Header, Footer, Container)
+- [ ] **목차(TOC)** — `notion-renderer.tsx`가 렌더링하는 `heading_1`/`heading_2`/`heading_3` 블록을 기반으로 목차 컴포넌트 생성
+  - `src/components/common/table-of-contents.tsx` (신규, Client Component)
+  - 각 heading에 `id` 슬러그 부여 (텍스트 기반, 중복 시 인덱스 접미사)
+  - `IntersectionObserver`로 현재 스크롤 위치의 섹션 하이라이트
+  - 데스크톱: 본문 우측 sticky 사이드바 / 모바일: 접이식 또는 숨김 (반응형 대응 필수, PRD 4-4 브레이크포인트 기준)
+- [ ] **이전/다음 노트 네비게이션** — 노트 상세 페이지 하단에 같은 강의 내 이전글/다음글 링크
+  - `src/lib/notion.ts`에 `getAdjacentNotes(databaseId, noteId)` 추가 또는 `getNotes(databaseId)` 재사용해 페이지 컴포넌트에서 현재 노트의 인덱스 계산
+  - 정렬 기준은 기존 `getNotes`와 동일하게 `Published` 내림차순 유지
+  - 첫 글/마지막 글일 때는 해당 방향 링크 비노출
+  - `src/components/common/note-pagination.tsx` (신규)
 
 ### 테스트 (Playwright MCP)
 
-- `pnpm dev` 기동 후 `browser_navigate`로 `http://localhost:3000` 접속 → 200 응답 확인
-- `browser_snapshot`으로 Header / Footer 렌더링 확인
+- `browser_navigate /courses/[courseId]/[noteId]` → `browser_snapshot`으로 목차 렌더링 확인 (heading 개수와 목차 항목 수 일치)
+- `browser_click`으로 목차 항목 클릭 → 해당 섹션으로 스크롤 이동 확인
+- 스크롤 후 `browser_snapshot`으로 현재 섹션 하이라이트 반영 확인
+- 이전/다음 노트 링크 클릭 → 올바른 노트로 이동 확인
+- 목록의 첫 번째/마지막 노트에서 각각 다음/이전 링크가 없는지 확인
+- `browser_resize`로 375px 뷰포트 전환 후 목차 레이아웃이 깨지지 않는지 확인
 - `browser_console_messages`로 콘솔 에러 없음 확인
 
 ### 완료 기준
 
-- `pnpm dev` 에러 없이 기동
-- Notion API 키로 강의 목록 DB 호출 시 데이터 정상 반환
-- `.env.local`의 두 환경 변수 모두 설정 완료
+- heading이 있는 노트에서 목차가 정확히 표시되고 클릭 시 해당 섹션으로 이동
+- 스크롤에 따라 현재 위치가 목차에 반영됨
+- 노트 상세 페이지 하단에 이전/다음 노트 링크가 정렬 순서에 맞게 표시
+- 375px / 768px / 1280px 모두에서 레이아웃 정상
 - Playwright 테스트 전 항목 통과
 
 ### 이유
 
-견고한 기반 없이는 기능 개발이 어렵다. Notion API 연동이 검증되지 않은 상태로 UI 개발을 진행하면 나중에 데이터 구조 불일치로 대규모 수정이 발생할 수 있다.
+노트 콘텐츠가 길어질수록 목차 없이는 원하는 섹션을 찾기 어렵고, 강의를 순서대로 복습하는 사용 패턴상 이전/다음 네비게이션이 있어야 노트 목록으로 돌아가지 않고도 연속해서 읽을 수 있다.
 
 ---
 
-## Phase 2: 공통 모듈 개발 (예상 2~3일)
+## Phase 7: Notion 콘텐츠 표현력 확대 (예상 3~4일)
 
 ### 작업 목록
 
-- [x] `src/lib/notion.ts` — Notion 클라이언트 초기화 및 공통 API 함수 구현
-  - `getCourses()`: 강의 목록 DB 전체 조회
-  - `getNotes(databaseId)`: 특정 강의의 `Status === "발행됨"` 노트 목록 조회 (Published 내림차순, `대기`/`초안` 제외)
-  - `getNote(noteId)`: 노트 상세 페이지 블록 콘텐츠 조회
-- [x] 공통 타입 정의 (`Course`, `Note`, `NotionBlock` 등)
-- [x] 공통 컴포넌트 기초 구현
-  - `src/components/layout/header.tsx`
-  - `src/components/layout/footer.tsx`
-  - `src/components/layout/container.tsx`
-
-### 테스트 (Playwright MCP) — API 연동이 핵심이므로 꼼꼼히 검증
-
-- `browser_navigate /` 접속 후 `browser_snapshot`으로 강의 카드 데이터 로드 확인
-- `getCourses()` 반환값이 비어있지 않은지 확인 (빈 배열이면 API 키·DB ID 재확인)
-- `getNotes(databaseId)` — `Status=발행됨` 필터 정상 동작 확인 (초안 글이 노출되지 않는지)
-- `browser_console_messages`로 각 API 호출 시 콘솔 에러 없음 확인
-
-### 완료 기준
-
-- `getCourses()`, `getNotes()`, `getNote()` 세 함수가 실제 Notion 데이터를 반환
-- TypeScript 타입 에러 없이 `pnpm build` 통과
-- Header / Footer가 모든 페이지에 공통 적용
-- Playwright 테스트 전 항목 통과
-
-### 이유
-
-모든 페이지에서 재사용되는 API 함수와 타입을 먼저 정의해야 이후 중복 코드를 방지하고 일관된 데이터 구조를 유지할 수 있다.
-
----
-
-## Phase 3: 핵심 기능 개발 (예상 3~4일)
-
-### 작업 목록
-
-- [x] 홈 페이지 (`src/app/page.tsx`) — 강의 목록 카드 레이아웃
-  - `src/components/common/course-card.tsx`: 썸네일, 강의명, 한 줄 설명 표시
-- [x] 노트 목록 페이지 (`src/app/courses/[courseId]/page.tsx`)
-  - `src/components/common/note-card.tsx`: 제목, 태그, 작성일 표시
-- [x] 노트 상세 페이지 (`src/app/courses/[courseId]/[noteId]/page.tsx`)
-  - `src/components/common/notion-renderer.tsx`: Notion 블록 → React 컴포넌트 렌더러
-  - MVP 지원 블록: 단락, 헤딩(H1–H3), 불릿 목록, 번호 목록, 코드 블록, 인용, 구분선, 이미지
-
-### 테스트 (Playwright MCP) — 페이지별 골든 패스 검증
-
-- **홈**: `browser_navigate /` → `browser_snapshot`으로 강의 카드 목록 확인, 카드 클릭 시 `/courses/[courseId]`로 이동 확인
-- **노트 목록**: `browser_navigate /courses/[courseId]` → 노트 목록 표시, 최신순 정렬 확인, `발행됨` 아닌 글 미노출 확인
-- **노트 상세**: `browser_navigate /courses/[courseId]/[noteId]` → 제목·태그·작성일 표시, 본문 블록(헤딩, 코드, 이미지 등) 렌더링 확인
-- `browser_console_messages`로 각 페이지 콘솔 에러 없음 확인
-- 미지원 블록이 있을 경우 에러 없이 스킵되는지 확인
-
-### 완료 기준
-
-- `/` 진입 시 Notion 강의 목록 DB의 강의 카드가 정상 표시
-- `/courses/[courseId]` 진입 시 해당 강의의 `발행됨` 노트 목록이 최신순으로 표시
-- `/courses/[courseId]/[noteId]` 진입 시 Notion 본문 블록이 올바르게 렌더링
-- 지원하지 않는 블록 타입은 에러 없이 무시(스킵)
-- Playwright 테스트 전 항목 통과
-
-### 이유
-
-블로그의 핵심 가치인 "Notion 노트를 웹에서 읽는다"는 흐름을 먼저 완성해야 한다. 이 기능이 동작하지 않으면 나머지 기능은 의미가 없다.
-
----
-
-## Phase 4: 추가 기능 개발 (예상 2~3일)
-
-> Phase 3 완료 후 진행. MVP 외 항목으로, 일정에 따라 생략 또는 후순위 조정 가능.
-
-### 작업 목록
-
-- [x] 태그 필터링 — 노트 목록 페이지에서 `Tags` 기준으로 필터
-- [x] 검색 기능 — 노트 제목 기준 클라이언트 사이드 검색
-- [x] SEO 최적화
-  - 각 페이지에 `generateMetadata` 적용 (`<title>`, `<meta description>`, Open Graph)
-  - 이미지 `alt` 텍스트 필수화
-- [x] 접근성 — 키보드 네비게이션, 포커스 트랩 점검
+- [ ] **Notion 블록 지원 확대** — `notion-renderer.tsx`의 `NotionBlock` switch 문에 케이스 추가
+  - `toggle` (접이식, `<details>/<summary>` 활용)
+  - `table` / `table_row` (Notion API는 테이블을 `table` 블록 + 자식 `table_row` 블록으로 반환하므로 `getNote`에서 자식 블록 재귀 조회 필요)
+  - `callout` (아이콘 + 배경색 강조 박스)
+  - `bookmark` (URL 미리보기 카드, 최소 링크 형태부터)
+  - `to_do` (체크박스 목록)
+  - 각 신규 블록 타입은 `lib/notion.ts`의 `BlockObjectResponse` 타입에 이미 포함되어 있는지 확인 후 렌더러에서만 분기 추가
+- [ ] **코드 블록 문법 강조** — 코드 블록에 syntax highlighting 적용
+  - `shiki` 도입 검토 (서버 컴포넌트에서 빌드 타임/요청 타임 하이라이팅 가능, 번들 크기 영향 적음)
+  - Notion 코드 블록의 `language` 필드를 매핑해 하이라이팅 언어 결정
+  - 다크모드 대응: 라이트/다크 테마 모두 대비되는 색상 세트 사용 (`globals.css`의 OKLCH 테마 변수와 조화)
+- [ ] **이미지 최적화**
+  - Notion `file` 타입 이미지 URL은 일정 시간 후 만료되므로, ISR 재검증 주기(60초)보다 긴 만료 주기를 감안한 대응 필요 — 우선 `next/image`의 `unoptimized`/캐싱 정책 재점검, 필요 시 자체 프록시/캐싱 라우트(`/api/image-proxy`) 검토
+  - 이미지 로딩 중 blur placeholder 또는 skeleton 적용
+  - `alt` 텍스트 누락 시 기본값 처리 로직은 이미 있음(`"노트 이미지"`) — 유지
 
 ### 테스트 (Playwright MCP)
 
-- **태그 필터**: `browser_click`으로 특정 태그 선택 → `browser_snapshot`으로 해당 태그 노트만 표시되는지 확인
-- **검색**: `browser_fill_form`으로 검색어 입력 → 실시간 필터링 결과 확인
-- **SEO**: `browser_evaluate`로 `document.title`, `meta[name="description"]` 값 확인
-- **접근성**: `browser_press_key`로 Tab 키 네비게이션 동작 확인
+- toggle/table/callout/bookmark/to_do 블록이 포함된 테스트 노트로 `browser_navigate` → `browser_snapshot`으로 각 블록 정상 렌더링 확인
+- toggle 블록 `browser_click`으로 펼침/접힘 동작 확인
+- 코드 블록에 언어별(`javascript`, `python` 등) 문법 강조 색상이 적용되는지 `browser_snapshot`/`browser_evaluate`로 확인
+- 다크모드 토글 후 코드 블록 대비가 유지되는지 확인
+- 이미지 블록 로딩 중 placeholder 표시 확인, 로딩 완료 후 정상 이미지 표시 확인
+- 미지원 블록(위 목록에 없는 타입)이 있어도 에러 없이 스킵되는지 재확인 (기존 회귀 방지)
+- `browser_console_messages`로 콘솔 에러 없음 확인
 
 ### 완료 기준
 
-- 태그 클릭 시 해당 태그의 노트만 필터링되어 표시
-- 검색창에 키워드 입력 시 노트 제목이 실시간으로 필터링
-- 브라우저 탭 제목과 OG 미리보기가 페이지별로 올바르게 표시
-- 키보드만으로 전체 페이지 탐색 가능
+- toggle, table, callout, bookmark, to_do 블록이 노트 상세 페이지에서 정상 렌더링
+- 코드 블록이 언어에 맞는 문법 강조로 표시되고 라이트/다크 모드 모두 가독성 확보
+- 이미지가 만료되거나 로딩이 느려도 페이지 전체가 깨지지 않고 placeholder로 대응
+- 기존 8종 블록 렌더링에 회귀 없음
 - Playwright 테스트 전 항목 통과
 
 ### 이유
 
-핵심 기능이 완성된 후 사용성과 검색 유입을 높이는 부가 기능을 추가한다. SEO는 Vercel 배포 전에 반드시 적용해야 효과가 있으므로 배포 직전 단계에 위치한다.
-
----
-
-## Phase 5: 최적화 및 배포 (예상 1~2일)
-
-### 작업 목록
-
-- [x] ISR 설정 — 각 페이지에 `revalidate = 60` 적용
-- [x] Notion API 오류 처리 — 빈 목록 또는 에러 페이지(`error.tsx`, `not-found.tsx`) 구현
-- [x] 반응형 디자인 점검 (375px / 768px / 1280px 브레이크포인트)
-- [ ] Vercel 환경 변수 설정 (`NOTION_API_KEY`, `NOTION_DATABASE_ID`) — *수동 확인 필요: Vercel 대시보드 설정은 코드로 확인 불가*
-- [ ] Vercel 배포 및 프로덕션 동작 검증 — *수동 확인 필요: 실제 배포 URL 접속 확인 필요*
-
-### 테스트 (Playwright MCP)
-
-- **반응형**: `browser_resize`로 375px / 768px / 1280px 뷰포트 전환 후 `browser_take_screenshot`으로 레이아웃 확인
-- **에러 처리**: 존재하지 않는 경로(`/courses/invalid-id`) 접속 → `not-found.tsx` 노출 확인
-- **프로덕션**: Vercel 배포 URL로 `browser_navigate` 후 전체 페이지 smoke test
-
-### 완료 기준
-
-- Vercel 프로덕션 URL에서 모든 페이지가 정상 로드
-- Notion에서 글을 `발행됨`으로 변경 후 최대 60초 내에 블로그에 반영
-- 모바일(375px) / 태블릿(768px) / 데스크톱(1280px) 화면에서 레이아웃이 깨지지 않음
-- Notion API 오류 발생 시 사용자에게 적절한 에러 메시지 표시
-- Playwright 테스트 전 항목 통과
-
-### 이유
-
-기능이 완성된 후 실제 사용 환경에서의 성능과 안정성을 확보한다. ISR을 통해 매 요청마다 Notion API를 호출하지 않아 응답 속도와 비용을 최적화한다.
+강의 노트는 코드와 표, 체크리스트 등 다양한 형태로 작성되는 경우가 많아, MVP의 8종 블록만으로는 실제 Notion 노트의 상당 부분이 누락되어 보일 수 있다. 코드 문법 강조는 강의 노트 특성상 가장 체감 효과가 큰 개선이다.
 
 ---
 
@@ -172,11 +106,8 @@
 
 | Phase | 내용 | 예상 소요일 | 누적 소요일 |
 |-------|------|------------|------------|
-| Phase 1 | 프로젝트 초기 설정 | 1~2일 | 1~2일 |
-| Phase 2 | 공통 모듈 개발 | 2~3일 | 3~5일 |
-| Phase 3 | 핵심 기능 개발 | 3~4일 | 6~9일 |
-| Phase 4 | 추가 기능 개발 | 2~3일 | 8~12일 |
-| Phase 5 | 최적화 및 배포 | 1~2일 | 9~14일 |
+| Phase 6 | 노트 상세 읽기 경험 개선 (목차, 이전/다음 네비게이션) | 2~3일 | 2~3일 |
+| Phase 7 | Notion 콘텐츠 표현력 확대 (블록 확대, 코드 강조, 이미지 최적화) | 3~4일 | 5~7일 |
 
 ---
 
@@ -184,25 +115,36 @@
 
 - 모든 테스트는 **Playwright MCP** 도구를 사용한다
 - 주요 도구: `browser_navigate`, `browser_snapshot`, `browser_click`, `browser_fill_form`, `browser_evaluate`, `browser_resize`, `browser_take_screenshot`, `browser_console_messages`, `browser_press_key`
-- API 연동(Phase 2)과 비즈니스 로직(Phase 3) 단계는 특히 꼼꼼히 검증한다
-- **구현 완료 → 테스트 수행 → 통과 확인 → 다음 Phase 진행** 순서를 반드시 지킨다
+- **구현 완료 → 코드 품질 검증 → Playwright 테스트 수행 → 통과 확인 → 다음 Phase 진행** 순서를 반드시 지킨다
 
 ### 코드 품질 검증 (매 기능 구현 직후, Playwright 테스트 이전)
 
-각 작업 목록 항목(또는 의미 있는 단위의 구현)을 마칠 때마다 Playwright 테스트를 진행하기 전에 다음 3가지를 통과해야 한다:
+각 작업 목록 항목(또는 의미 있는 단위의 구현)을 마칠 때마다 다음 항목을 **순서대로** 확인한다. 하나라도 실패하면 다음 단계로 넘어가지 않고 즉시 원인을 수정한다.
 
 1. `pnpm lint` — ESLint 규칙 위반 없음
-2. `pnpm build`(또는 `tsc --noEmit`) — TypeScript 타입 에러 없음
-3. `pnpm build` — 프로덕션 빌드 성공 (2번과 함께 확인 가능)
+2. `tsc --noEmit` — TypeScript 타입 에러 없음 (또는 `pnpm build`로 타입 체크까지 함께 확인)
+3. `pnpm build` — 프로덕션 빌드 성공
 
-세 가지 중 하나라도 실패하면 다음 작업으로 넘어가지 않고 즉시 원인을 수정한다. (현재 프로젝트에는 Prettier가 설치되어 있지 않으므로 포맷 검증은 대상에서 제외한다.)
+(Prettier는 설치되어 있지 않으므로 포맷 검증은 대상에서 제외한다.)
 
 ---
 
 ## 의존 관계
 
 ```
-Phase 1 (환경) → Phase 2 (공통 모듈) → Phase 3 (핵심 기능) → Phase 4 (추가 기능) → Phase 5 (배포)
+Phase 6 (읽기 경험) → Phase 7 (콘텐츠 표현력)
 ```
 
-Phase 3 페이지 구현과 SEO 메타 태그 작업(Phase 4 일부)은 병행 가능하나, 각 Phase의 Playwright 테스트 통과가 선행되어야 한다.
+Phase 6과 Phase 7은 서로 다른 파일(TOC/페이지네이션 vs. 블록 렌더러)을 주로 다루므로 병행 착수도 가능하나, 두 Phase 모두 `notion-renderer.tsx`와 노트 상세 `page.tsx`를 함께 건드리므로 병합 충돌을 피하려면 순차 진행을 권장한다.
+
+---
+
+## 향후 후보 (이번 v2 범위 밖)
+
+우선순위 논의 시 참고용으로 남겨둔다.
+
+- 전체 강의 통합 검색
+- 관련 노트 추천 (태그 기반)
+- RSS 피드
+- 사이트맵 자동 생성
+- Notion Webhook 기반 즉시 재검증 (ISR 60초 대체)
