@@ -18,7 +18,10 @@ function NotionBlock({ block }: { block: BlockObjectResponse }) {
     case "heading_1": {
       const text = extractPlainText(block.heading_1.rich_text)
       return (
-        <h1 className="mt-8 text-2xl font-semibold tracking-tight first:mt-0">
+        <h1
+          id={block.id}
+          className="mt-8 scroll-mt-24 text-2xl font-semibold tracking-tight first:mt-0"
+        >
           {text}
         </h1>
       )
@@ -27,7 +30,10 @@ function NotionBlock({ block }: { block: BlockObjectResponse }) {
     case "heading_2": {
       const text = extractPlainText(block.heading_2.rich_text)
       return (
-        <h2 className="mt-6 text-xl font-semibold tracking-tight first:mt-0">
+        <h2
+          id={block.id}
+          className="mt-6 scroll-mt-24 text-xl font-semibold tracking-tight first:mt-0"
+        >
           {text}
         </h2>
       )
@@ -36,7 +42,10 @@ function NotionBlock({ block }: { block: BlockObjectResponse }) {
     case "heading_3": {
       const text = extractPlainText(block.heading_3.rich_text)
       return (
-        <h3 className="mt-4 text-lg font-semibold tracking-tight first:mt-0">
+        <h3
+          id={block.id}
+          className="mt-4 scroll-mt-24 text-lg font-semibold tracking-tight first:mt-0"
+        >
           {text}
         </h3>
       )
@@ -96,6 +105,24 @@ function NotionBlock({ block }: { block: BlockObjectResponse }) {
   }
 }
 
+export type Heading = { id: string; text: string; level: 1 | 2 | 3 }
+
+function extractHeadings(blocks: BlockObjectResponse[]): Heading[] {
+  const headings: Heading[] = []
+
+  for (const block of blocks) {
+    if (block.type === "heading_1") {
+      headings.push({ id: block.id, text: extractPlainText(block.heading_1.rich_text), level: 1 })
+    } else if (block.type === "heading_2") {
+      headings.push({ id: block.id, text: extractPlainText(block.heading_2.rich_text), level: 2 })
+    } else if (block.type === "heading_3") {
+      headings.push({ id: block.id, text: extractPlainText(block.heading_3.rich_text), level: 3 })
+    }
+  }
+
+  return headings
+}
+
 function groupListItems(blocks: BlockObjectResponse[]) {
   type Group =
     | { kind: "list"; listType: "bulleted_list_item" | "numbered_list_item"; items: BlockObjectResponse[] }
@@ -148,4 +175,4 @@ function NotionRenderer({ blocks }: { blocks: BlockObjectResponse[] }) {
   )
 }
 
-export { NotionRenderer }
+export { NotionRenderer, extractHeadings }

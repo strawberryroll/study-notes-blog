@@ -96,6 +96,21 @@ export async function getNotes(databaseId: string): Promise<Note[]> {
   }))
 }
 
+export async function getAdjacentNotes(
+  databaseId: string,
+  noteId: string
+): Promise<{ prev: Note | null; next: Note | null }> {
+  const notes = await getNotes(databaseId)
+  const index = notes.findIndex((n) => n.id === noteId)
+
+  if (index === -1) return { prev: null, next: null }
+
+  return {
+    prev: notes[index + 1] ?? null,
+    next: notes[index - 1] ?? null,
+  }
+}
+
 export const getNote = cache(
   async (
     noteId: string

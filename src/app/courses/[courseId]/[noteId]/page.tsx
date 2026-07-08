@@ -3,8 +3,16 @@ import { notFound } from "next/navigation"
 
 import { Badge } from "@/components/ui/badge"
 import { Container } from "@/components/layout/container"
-import { NotionRenderer } from "@/components/common/notion-renderer"
-import { getNote, type BlockObjectResponse, type Note } from "@/lib/notion"
+import { NotionRenderer, extractHeadings } from "@/components/common/notion-renderer"
+import { TableOfContents } from "@/components/common/table-of-contents"
+import { NotePagination } from "@/components/common/note-pagination"
+import {
+  getAdjacentNotes,
+  getCourses,
+  getNote,
+  type BlockObjectResponse,
+  type Note,
+} from "@/lib/notion"
 
 interface Props {
   params: Promise<{ courseId: string; noteId: string }>
@@ -36,7 +44,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function NoteDetailPage({ params }: Props) {
-  const { noteId } = await params
+  const { courseId, noteId } = await params
+
+  const courses = await getCourses()
+  const course = courses.find((c) => c.id === courseId)
+
+  if (!course) {
+    notFound()
+  }
 
   let note: Note
   let blocks: BlockObjectResponse[]
@@ -46,6 +61,9 @@ export default async function NoteDetailPage({ params }: Props) {
   } catch {
     notFound()
   }
+
+  const headings = extractHeadings(blocks)
+  const { prev, next } = await getAdjacentNotes(course.databaseId, noteId)
 
   return (
     <Container className="py-16 sm:py-24">
@@ -69,7 +87,18 @@ export default async function NoteDetailPage({ params }: Props) {
 
       <div className="mb-8 border-t" />
 
-      <NotionRenderer blocks={blocks} />
+      <div className="lg:grid lg:grid-cols-[1fr_240px] lg:gap-8">
+        <div className="order-2 lg:order-1">
+          <NotionRenderer blocks={blocks} />
+        </div>
+        <aside className="order-1 mb-8 lg:order-2 lg:mb-0">
+          <TableOfContents headings={headings} />
+        </aside>
+      </div>
+
+      <div className="mt-12 border-t pt-8">
+        <NotePagination courseId={courseId} prev={prev} next={next} />
+      </div>
     </Container>
   )
 }
