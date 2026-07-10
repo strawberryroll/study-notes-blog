@@ -10,7 +10,7 @@ import {
   getAdjacentNotes,
   getCourses,
   getNote,
-  type BlockObjectResponse,
+  type BlockWithChildren,
   type Note,
 } from "@/lib/notion"
 
@@ -54,7 +54,7 @@ export default async function NoteDetailPage({ params }: Props) {
   }
 
   let note: Note
-  let blocks: BlockObjectResponse[]
+  let blocks: BlockWithChildren[]
 
   try {
     ;({ page: note, blocks } = await getNote(noteId))

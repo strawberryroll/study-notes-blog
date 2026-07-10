@@ -1,13 +1,23 @@
-import Image from "next/image"
+import { ChevronRight, Link2, Square, SquareCheck } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import type { BlockObjectResponse } from "@/lib/notion"
+import { NotionImage } from "@/components/common/notion-image"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import type { BlockWithChildren } from "@/lib/notion"
 
 function extractPlainText(richText: { plain_text: string }[]): string {
   return richText.map((t) => t.plain_text).join("")
 }
 
-function NotionBlock({ block }: { block: BlockObjectResponse }) {
+function NotionBlock({ block }: { block: BlockWithChildren }) {
   switch (block.type) {
     case "paragraph": {
       const text = extractPlainText(block.paragraph.rich_text)
@@ -82,6 +92,101 @@ function NotionBlock({ block }: { block: BlockObjectResponse }) {
     case "divider":
       return <hr className="border-t" />
 
+    case "toggle": {
+      const text = extractPlainText(block.toggle.rich_text)
+      return (
+        <details className="group rounded-lg border p-3">
+          <summary className="flex cursor-pointer items-center gap-2 font-medium marker:content-none">
+            <ChevronRight className="size-4 shrink-0 transition-transform group-open:rotate-90" />
+            {text}
+          </summary>
+          <div className="mt-2 pl-6">
+            <NotionRenderer blocks={block.children} />
+          </div>
+        </details>
+      )
+    }
+
+    case "callout": {
+      const text = extractPlainText(block.callout.rich_text)
+      const icon = block.callout.icon
+      return (
+        <div className="flex gap-3 rounded-lg bg-muted p-4">
+          <span aria-hidden="true">{icon?.type === "emoji" ? icon.emoji : "💡"}</span>
+          <div className="space-y-2">
+            <p className="leading-7">{text}</p>
+            {block.has_children && <NotionRenderer blocks={block.children} />}
+          </div>
+        </div>
+      )
+    }
+
+    case "to_do": {
+      const text = extractPlainText(block.to_do.rich_text)
+      return (
+        <li className="flex list-none items-start gap-2 leading-7">
+          {block.to_do.checked ? (
+            <SquareCheck className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          ) : (
+            <Square className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          )}
+          <span className={cn(block.to_do.checked && "text-muted-foreground line-through")}>
+            {text}
+          </span>
+        </li>
+      )
+    }
+
+    case "table": {
+      const rows = block.children.filter(
+        (c): c is BlockWithChildren & { type: "table_row" } => c.type === "table_row"
+      )
+      const [headerRow, ...bodyRows] = rows
+      const dataRows = block.table.has_column_header ? bodyRows : rows
+
+      return (
+        <Table>
+          {block.table.has_column_header && headerRow && (
+            <TableHeader>
+              <TableRow>
+                {headerRow.table_row.cells.map((cell, i) => (
+                  <TableHead key={i}>{extractPlainText(cell)}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+          )}
+          <TableBody>
+            {dataRows.map((row) => (
+              <TableRow key={row.id}>
+                {row.table_row.cells.map((cell, i) => (
+                  <TableCell key={i}>{extractPlainText(cell)}</TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )
+    }
+
+    case "bookmark": {
+      const { url, caption } = block.bookmark
+      return (
+        <a href={url} target="_blank" rel="noopener noreferrer" className="block">
+          <Card className="transition-colors hover:bg-muted/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
+                <Link2 className="size-4 shrink-0" aria-hidden="true" />
+                {url}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          {caption.length > 0 && (
+            <p className="mt-1 text-sm text-muted-foreground">{extractPlainText(caption)}</p>
+          )}
+        </a>
+      )
+    }
+
     case "image": {
       const image = block.image
       const src = image.type === "external" ? image.external.url : image.file.url
@@ -89,7 +194,7 @@ function NotionBlock({ block }: { block: BlockObjectResponse }) {
       return (
         <figure className="space-y-2">
           <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-muted">
-            <Image src={src} alt={alt} fill className="object-contain" />
+            <NotionImage src={src} alt={alt} />
           </div>
           {image.caption.length > 0 && (
             <figcaption className="text-center text-sm text-muted-foreground">
@@ -107,7 +212,7 @@ function NotionBlock({ block }: { block: BlockObjectResponse }) {
 
 export type Heading = { id: string; text: string; level: 1 | 2 | 3 }
 
-function extractHeadings(blocks: BlockObjectResponse[]): Heading[] {
+function extractHeadings(blocks: BlockWithChildren[]): Heading[] {
   const headings: Heading[] = []
 
   for (const block of blocks) {
@@ -118,20 +223,32 @@ function extractHeadings(blocks: BlockObjectResponse[]): Heading[] {
     } else if (block.type === "heading_3") {
       headings.push({ id: block.id, text: extractPlainText(block.heading_3.rich_text), level: 3 })
     }
+
+    if (block.children.length > 0) {
+      headings.push(...extractHeadings(block.children))
+    }
   }
 
   return headings
 }
 
-function groupListItems(blocks: BlockObjectResponse[]) {
+function groupListItems(blocks: BlockWithChildren[]) {
   type Group =
-    | { kind: "list"; listType: "bulleted_list_item" | "numbered_list_item"; items: BlockObjectResponse[] }
-    | { kind: "block"; block: BlockObjectResponse }
+    | {
+        kind: "list"
+        listType: "bulleted_list_item" | "numbered_list_item" | "to_do"
+        items: BlockWithChildren[]
+      }
+    | { kind: "block"; block: BlockWithChildren }
 
   const groups: Group[] = []
 
   for (const block of blocks) {
-    if (block.type === "bulleted_list_item" || block.type === "numbered_list_item") {
+    if (
+      block.type === "bulleted_list_item" ||
+      block.type === "numbered_list_item" ||
+      block.type === "to_do"
+    ) {
       const last = groups[groups.length - 1]
       if (last?.kind === "list" && last.listType === block.type) {
         last.items.push(block)
@@ -146,20 +263,22 @@ function groupListItems(blocks: BlockObjectResponse[]) {
   return groups
 }
 
-function NotionRenderer({ blocks }: { blocks: BlockObjectResponse[] }) {
+function NotionRenderer({ blocks }: { blocks: BlockWithChildren[] }) {
   const groups = groupListItems(blocks)
 
   return (
     <div className="space-y-4">
       {groups.map((group, index) => {
         if (group.kind === "list") {
-          const ListTag = group.listType === "bulleted_list_item" ? "ul" : "ol"
+          const ListTag = group.listType === "numbered_list_item" ? "ol" : "ul"
           return (
             <ListTag
               key={index}
               className={cn(
-                "space-y-1 pl-6",
-                group.listType === "bulleted_list_item" ? "list-disc" : "list-decimal"
+                "space-y-1",
+                group.listType === "bulleted_list_item" && "list-disc pl-6",
+                group.listType === "numbered_list_item" && "list-decimal pl-6",
+                group.listType === "to_do" && "list-none"
               )}
             >
               {group.items.map((item) => (

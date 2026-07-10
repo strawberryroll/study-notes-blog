@@ -1,5 +1,5 @@
 import { cache } from "react"
-import { Client, isFullPage } from "@notionhq/client"
+import { Client, collectPaginatedAPI, isFullPage } from "@notionhq/client"
 import type {
   BlockObjectResponse,
   PageObjectResponse,
@@ -111,13 +111,32 @@ export async function getAdjacentNotes(
   }
 }
 
+export type BlockWithChildren = BlockObjectResponse & {
+  children: BlockWithChildren[]
+}
+
+async function fetchBlockChildren(blockId: string): Promise<BlockWithChildren[]> {
+  const results = await collectPaginatedAPI(notion.blocks.children.list, {
+    block_id: blockId,
+  })
+
+  const blocks = results.filter((b): b is BlockObjectResponse => "type" in b)
+
+  return Promise.all(
+    blocks.map(async (block) => ({
+      ...block,
+      children: block.has_children ? await fetchBlockChildren(block.id) : [],
+    }))
+  )
+}
+
 export const getNote = cache(
   async (
     noteId: string
-  ): Promise<{ page: Note; blocks: BlockObjectResponse[] }> => {
-    const [pageResponse, { results }] = await Promise.all([
+  ): Promise<{ page: Note; blocks: BlockWithChildren[] }> => {
+    const [pageResponse, blocks] = await Promise.all([
       notion.pages.retrieve({ page_id: noteId }),
-      notion.blocks.children.list({ block_id: noteId }),
+      fetchBlockChildren(noteId),
     ])
 
     if (!isFullPage(pageResponse)) throw new Error(`Note not found: ${noteId}`)
@@ -130,7 +149,7 @@ export const getNote = cache(
         published: extractDate(getProp(pageResponse, "Published")),
         status: extractSelect(getProp(pageResponse, "Status")),
       },
-      blocks: results.filter((b): b is BlockObjectResponse => "type" in b),
+      blocks,
     }
   }
 )
