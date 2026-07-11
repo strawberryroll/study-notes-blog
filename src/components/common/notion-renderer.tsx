@@ -1,8 +1,9 @@
-import { ChevronRight, Link2, Square, SquareCheck } from "lucide-react"
+import { Suspense } from "react"
+import { ChevronRight, Square, SquareCheck } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { BookmarkCard, MinimalBookmarkCard } from "@/components/common/bookmark-card"
 import { NotionImage } from "@/components/common/notion-image"
-import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -171,19 +172,9 @@ function NotionBlock({ block }: { block: BlockWithChildren }) {
     case "bookmark": {
       const { url, caption } = block.bookmark
       return (
-        <a href={url} target="_blank" rel="noopener noreferrer" className="block">
-          <Card className="transition-colors hover:bg-muted/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
-                <Link2 className="size-4 shrink-0" aria-hidden="true" />
-                {url}
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          {caption.length > 0 && (
-            <p className="mt-1 text-sm text-muted-foreground">{extractPlainText(caption)}</p>
-          )}
-        </a>
+        <Suspense fallback={<MinimalBookmarkCard url={url} caption={caption} />}>
+          <BookmarkCard url={url} caption={caption} />
+        </Suspense>
       )
     }
 
