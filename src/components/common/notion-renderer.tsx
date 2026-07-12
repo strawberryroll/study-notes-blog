@@ -3,6 +3,7 @@ import { ChevronRight, Square, SquareCheck } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { BookmarkCard, MinimalBookmarkCard } from "@/components/common/bookmark-card"
+import { HighlightedCodeBlock, PlainCodeBlock } from "@/components/common/code-block"
 import { NotionImage } from "@/components/common/notion-image"
 import {
   Table,
@@ -74,10 +75,11 @@ function NotionBlock({ block }: { block: BlockWithChildren }) {
 
     case "code": {
       const text = extractPlainText(block.code.rich_text)
+      const language = block.code.language
       return (
-        <pre className="overflow-x-auto rounded-lg bg-muted p-4 text-sm">
-          <code>{text}</code>
-        </pre>
+        <Suspense fallback={<PlainCodeBlock code={text} />}>
+          <HighlightedCodeBlock code={text} language={language} />
+        </Suspense>
       )
     }
 
