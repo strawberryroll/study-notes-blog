@@ -70,7 +70,7 @@ src/
   - `getCourses()`: 강의 목록 DB 전체 조회
   - `getNotes(databaseId: string)`: `Status === "발행됨"` 필터 + `Published` 내림차순
   - `getNote(noteId: string)`: 노트 상세 + 블록 콘텐츠 조회
-- 환경 변수: `NOTION_API_KEY`, `NOTION_COURSES_DB_ID` (`.env.local` 및 Vercel 설정 필요)
+- 환경 변수: `NOTION_API_KEY`, `NOTION_DATABASE_ID` (`.env.local` 및 Vercel 설정 필요)
 
 ### 페이지 데이터 페칭
 
