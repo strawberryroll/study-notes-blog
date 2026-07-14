@@ -25,6 +25,10 @@ export type Note = {
 
 export type { BlockObjectResponse }
 
+export function extractPlainText(richText: { plain_text: string }[]): string {
+  return richText.map((t) => t.plain_text).join("")
+}
+
 function getProp(page: PageObjectResponse, name: string) {
   return page.properties[name]
 }

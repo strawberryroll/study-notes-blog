@@ -13,11 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { BlockWithChildren } from "@/lib/notion"
-
-function extractPlainText(richText: { plain_text: string }[]): string {
-  return richText.map((t) => t.plain_text).join("")
-}
+import { extractPlainText, type BlockWithChildren } from "@/lib/notion"
 
 function NotionBlock({ block }: { block: BlockWithChildren }) {
   switch (block.type) {

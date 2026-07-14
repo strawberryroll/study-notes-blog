@@ -8,10 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { getLinkPreview } from "@/lib/link-preview"
-
-function extractPlainText(richText: { plain_text: string }[]): string {
-  return richText.map((t) => t.plain_text).join("")
-}
+import { extractPlainText } from "@/lib/notion"
 
 function MinimalBookmarkCard({
   url,
