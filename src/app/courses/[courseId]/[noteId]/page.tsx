@@ -1,11 +1,11 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { Badge } from "@/components/ui/badge"
 import { Container } from "@/components/layout/container"
 import { NotionRenderer, extractHeadings } from "@/components/common/notion-renderer"
 import { TableOfContents } from "@/components/common/table-of-contents"
 import { NotePagination } from "@/components/common/note-pagination"
+import { NoteMeta } from "@/components/common/note-meta"
 import {
   getAdjacentNotes,
   getCourses,
@@ -71,18 +71,7 @@ export default async function NoteDetailPage({ params }: Props) {
         <h1 className="text-3xl font-semibold tracking-tight">
           {note.title}
         </h1>
-        <div className="flex flex-wrap items-center gap-2">
-          {note.published && (
-            <span className="text-sm text-muted-foreground">
-              {note.published}
-            </span>
-          )}
-          {note.tags.map((tag) => (
-            <Badge key={tag} variant="secondary">
-              {tag}
-            </Badge>
-          ))}
-        </div>
+        <NoteMeta note={note} />
       </div>
 
       <div className="mb-8 border-t" />
