@@ -1,13 +1,12 @@
 "use client"
 
-import { useState } from "react"
 import { ImageOff } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useImageLoadState } from "@/lib/use-image-load-state"
 
 function LinkPreviewImage({ src, alt }: { src: string; alt: string }) {
-  const [loaded, setLoaded] = useState(false)
-  const [error, setError] = useState(false)
+  const { loaded, error, onLoad, onError } = useImageLoadState()
 
   if (error) {
     return (
@@ -23,8 +22,8 @@ function LinkPreviewImage({ src, alt }: { src: string; alt: string }) {
       src={src}
       alt={alt}
       loading="lazy"
-      onLoad={() => setLoaded(true)}
-      onError={() => setError(true)}
+      onLoad={onLoad}
+      onError={onError}
       className={cn(
         "size-full object-cover transition-opacity duration-300",
         loaded ? "opacity-100" : "opacity-0"

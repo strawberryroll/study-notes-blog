@@ -1,14 +1,13 @@
 "use client"
 
-import { useState } from "react"
 import Image from "next/image"
 import { ImageOff } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useImageLoadState } from "@/lib/use-image-load-state"
 
 function NotionImage({ src, alt }: { src: string; alt: string }) {
-  const [loaded, setLoaded] = useState(false)
-  const [error, setError] = useState(false)
+  const { loaded, error, onLoad, onError } = useImageLoadState()
 
   if (error) {
     return (
@@ -29,8 +28,8 @@ function NotionImage({ src, alt }: { src: string; alt: string }) {
         "object-contain transition-opacity duration-300",
         loaded ? "opacity-100" : "opacity-0"
       )}
-      onLoad={() => setLoaded(true)}
-      onError={() => setError(true)}
+      onLoad={onLoad}
+      onError={onError}
     />
   )
 }
