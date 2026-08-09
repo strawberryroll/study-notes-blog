@@ -21,10 +21,12 @@
 ```env
 NOTION_API_KEY=secret_xxxx
 NOTION_DATABASE_ID=xxxx
+NEXT_PUBLIC_SITE_URL=https://study-notes-blog-sooty.vercel.app
 ```
 
 - `NOTION_API_KEY`: [Notion Integrations](https://www.notion.so/my-integrations)에서 발급
 - `NOTION_DATABASE_ID`: 강의 목록을 관리하는 Notion 데이터베이스 URL에서 추출
+- `NEXT_PUBLIC_SITE_URL` (선택): OG 메타데이터의 `metadataBase`로 사용되는 배포 도메인. 미설정 시 프로덕션 배포 URL이 기본값으로 사용됨
 
 ### 2. 의존성 설치
 

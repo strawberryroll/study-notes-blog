@@ -19,6 +19,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://study-notes-blog-sooty.vercel.app"
+  ),
   title: "Study Notes",
   description: "강의를 들으며 정리한 복습 노트 모음",
 };
