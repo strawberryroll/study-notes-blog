@@ -1,6 +1,7 @@
 "use server"
 
 import { timingSafeEqual } from "node:crypto"
+import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
@@ -45,4 +46,15 @@ export async function logoutAction() {
   const cookieStore = await cookies()
   cookieStore.delete({ name: ADMIN_SESSION_COOKIE, path: "/admin" })
   redirect("/admin/login")
+}
+
+export async function revalidateNoteAction(courseId: string, noteId: string) {
+  revalidatePath(`/courses/${courseId}/${noteId}`)
+  revalidatePath(`/courses/${courseId}`)
+  revalidatePath("/")
+}
+
+export async function revalidateCourseAction(courseId: string) {
+  revalidatePath(`/courses/${courseId}`)
+  revalidatePath("/")
 }

@@ -1,8 +1,12 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 
+import { revalidateNoteAction } from "@/app/admin/actions"
+import { RevalidateButton } from "@/components/admin/revalidate-button"
 import { StatusBadge } from "@/components/admin/status-badge"
+import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
@@ -48,6 +52,7 @@ export function NotesTable({ data }: { data: CourseWithNotes[] }) {
                     <TableHead>제목</TableHead>
                     <TableHead>상태</TableHead>
                     <TableHead>작성일</TableHead>
+                    <TableHead>작업</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -58,6 +63,18 @@ export function NotesTable({ data }: { data: CourseWithNotes[] }) {
                         <StatusBadge status={note.status} />
                       </TableCell>
                       <TableCell>{note.published}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={`/admin/courses/${course.id}/${note.id}`}>
+                              미리보기
+                            </Link>
+                          </Button>
+                          <RevalidateButton
+                            action={revalidateNoteAction.bind(null, course.id, note.id)}
+                          />
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
