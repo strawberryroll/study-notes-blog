@@ -100,6 +100,33 @@ export async function getNotes(databaseId: string): Promise<Note[]> {
   }))
 }
 
+export const getNotesForAdmin = cache(async (databaseId: string): Promise<Note[]> => {
+  const { results } = await notion.databases.query({
+    database_id: databaseId,
+    sorts: [{ property: "Published", direction: "descending" }],
+  })
+
+  return results.filter(isFullPage).map((page) => ({
+    id: page.id,
+    title: extractTitle(getProp(page, "Title")),
+    tags: extractMultiSelect(getProp(page, "Tags")),
+    published: extractDate(getProp(page, "Published")),
+    status: extractSelect(getProp(page, "Status")),
+  }))
+})
+
+export type CourseWithNotes = { course: Course; notes: Note[] }
+
+export const getDashboardData = cache(async (): Promise<CourseWithNotes[]> => {
+  const courses = await getCourses()
+  return Promise.all(
+    courses.map(async (course) => ({
+      course,
+      notes: await getNotesForAdmin(course.databaseId),
+    }))
+  )
+})
+
 export async function getAdjacentNotes(
   databaseId: string,
   noteId: string
