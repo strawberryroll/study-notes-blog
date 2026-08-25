@@ -4,30 +4,60 @@ import { useState } from "react"
 
 import { NoteCard } from "@/components/common/note-card"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import type { Note } from "@/lib/notion"
+
+type SortOrder = "desc" | "asc"
 
 function NoteList({ courseId, notes }: { courseId: string; notes: Note[] }) {
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [query, setQuery] = useState("")
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc")
 
   const allTags = Array.from(new Set(notes.flatMap((n) => n.tags)))
 
-  const filtered = notes.filter(
-    (n) =>
-      (!selectedTag || n.tags.includes(selectedTag)) &&
-      n.title.toLowerCase().includes(query.toLowerCase())
-  )
+  const filtered = notes
+    .filter(
+      (n) =>
+        (!selectedTag || n.tags.includes(selectedTag)) &&
+        n.title.toLowerCase().includes(query.toLowerCase())
+    )
+    .sort((a, b) => {
+      const diff = new Date(a.published).getTime() - new Date(b.published).getTime()
+      return sortOrder === "asc" ? diff : -diff
+    })
 
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <Input
-          aria-label="노트 검색"
-          placeholder="노트 제목 검색"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Input
+            aria-label="노트 검색"
+            placeholder="노트 제목 검색"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="flex-1"
+          />
+          <Select
+            value={sortOrder}
+            onValueChange={(value) => setSortOrder(value as SortOrder)}
+          >
+            <SelectTrigger aria-label="정렬 기준" className="sm:w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">최신순</SelectItem>
+              <SelectItem value="asc">오래된순</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {allTags.length > 0 && (
           <div role="group" aria-label="태그 필터" className="flex flex-wrap gap-2">

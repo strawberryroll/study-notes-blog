@@ -1,6 +1,7 @@
 import { Logo } from "@/components/common/logo"
 import { ThemeToggle } from "@/components/common/theme-toggle"
 import { Container } from "@/components/layout/container"
+import { Badge } from "@/components/ui/badge"
 
 export function Header() {
   return (
@@ -13,7 +14,12 @@ export function Header() {
       </a>
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <Container className="flex h-14 items-center justify-between">
-          <Logo />
+          <div className="flex items-center gap-2">
+            <Logo />
+            <Badge variant="secondary" className="hidden sm:inline-flex">
+              학습 기록
+            </Badge>
+          </div>
           <ThemeToggle />
         </Container>
       </header>

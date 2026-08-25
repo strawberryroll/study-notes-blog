@@ -25,7 +25,7 @@ function CourseCard({ course }: { course: Course }) {
           </div>
         )}
         <CardHeader>
-          <CardTitle className="text-lg font-semibold tracking-tight sm:text-xl">
+          <CardTitle className="text-base font-semibold tracking-tight sm:text-lg">
             {course.title}
           </CardTitle>
           {course.description && (

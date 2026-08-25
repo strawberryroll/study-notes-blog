@@ -10,10 +10,10 @@ export default async function Home() {
   return (
     <Container className="py-16 sm:py-24">
       <div className="mb-12 sm:mb-16">
-        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           강의 목록
         </h1>
-        <p className="mt-3 text-muted-foreground sm:text-lg">
+        <p className="mt-2 text-muted-foreground">
           강의를 수강하며 정리한 복습 노트를 확인해보세요.
         </p>
       </div>

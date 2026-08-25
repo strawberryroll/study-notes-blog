@@ -25,7 +25,7 @@
       "command": "node",
       "args": ["/Users/nuyha/workspace/mcp-shrimp-task-manager/dist/index.js"],
       "env": {
-        "DATA_DIR": "/Users/nuyha/workspace/courses/learn-claude/shrimp_data",
+        "DATA_DIR": "/Users/nuyha/workspace/courses/study-notes-blog/shrimp_data",
         "TEMPLATES_USE": "ko",
         "ENABLE_GUI": "true"
       }
